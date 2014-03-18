@@ -8,14 +8,20 @@
 <script src="js/latlon.js">/* Latitude/Longitude formulae */</script>
 <script src="js/geo.js">/* Geodesy representation conversions */</script>
 <script>
-$(document).ready(function() {
+var getCurrentPosition = function() {
+	$('#btnSearch').button().button('disable');
     navigator.geolocation.getCurrentPosition (function (pos) {
-              var lat = pos.coords.latitude;
-              var lng = pos.coords.longitude;
-              $("#lat").text(lat);
-              $("#lng").text(lng);
-    });
-    
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        $("#lat").text(lat);
+        $("#lng").text(lng);
+        $('#btnSearch').button('enable');
+	});
+} 
+
+$(document).ready(function() {
+	getCurrentPosition();
+	
     $('#btnSearch').click(function() {
        var lat = $('#lat').text();
        var lng = $('#lng').text();
@@ -24,6 +30,7 @@ $(document).ready(function() {
                    "&types=subway_station|bus_station|bank&sensor=false"+
                    "&key=AIzaSyALhtJModbZ3jyYGQ1erHpPpsitya38S-A";
        var jsonpUrl = "jsonp/" + encodeURIComponent(gUrl);
+       //var jsonpUrl = "http://jsonpwrappery.appspot.com/jsonp/" + encodeURIComponent(gUrl);
        console.log(jsonpUrl);
        $.ajax({
            url: jsonpUrl,
@@ -31,18 +38,23 @@ $(document).ready(function() {
            jsonp: "callback",
            success: function(receivedData) {
                var currentPosition = new LatLon(Geo.parseDMS($('#lat').text()), Geo.parseDMS($('#lng').text()));
-               //results->geometry->location->lat,lng
-               //results->name
+               $("#listView>li").remove();
                $.each(receivedData.results, function(index, value) {
                    console.log(value);
                    var pos = new LatLon(Geo.parseDMS(value.geometry.location.lat), Geo.parseDMS(value.geometry.location.lng));
-                   $("#listView").append('<li><a href="#">'+ value.name + '/' + pos.distanceTo(currentPosition) + 'km</a></li>');
+                   $("#listView").append('<li><a href="#">'+ value.name + '  /  ' + 
+                		   					Math.round(pos.distanceTo(currentPosition)*1000) + 'm</a></li>');
                });
            },
            error: function (xhr, ajaxOptions, thrownError) {
                alert(thrownError.message);
            }
        });
+    });
+    
+    $('#btnGetGps').click(function() {
+    	getCurrentPosition();
+    	$("#listView>li").remove();
     });
 })
 </script>
@@ -52,13 +64,14 @@ $(document).ready(function() {
 
 <div data-role=page id=home>
   <div data-role=header>
-    <h1>Home</h1>
+    <h1>Around Here</h1>
+    <button id=btnGetGps>Rescan My GPS location</button>
   </div>
 
   <div data-role=content>
     <span> Latitude : </span> <span id=lat></span> <br />
     <span> Longitude : </span> <span id=lng></span> <br />
-    <button id=btnSearch>Where am I?</button>
+    <button id=btnSearch disabled>What are around here?</button>
     
     <ul id="listView" data-role=listview data-inset=true>
     </ul>
