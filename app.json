@@ -1,0 +1,6 @@
+{
+  "name": "JSONP Wrapper",
+  "description": "JSONP Wrapper which implented with Java",
+  "image": "heroku/gradle",
+  "addons": [ "heroku-postgresql" ]
+}
